@@ -95,16 +95,16 @@
 	<distributionManagement>
 	
 	    <repository>
-	      <id>nexus</id>
-	      <name>KK FUNDA Releases Nexus Repository</name>
-	      <url>http://13.207.189.32:8081/repository/jio-release/</url>
-	    </repository>
-	    
-	    <snapshotRepository>
-	      <id>nexus</id>
-	      <name>KK FUNDA Snapshot Nexus Repository </name>
-	      <url>http://13.207.189.32:8081/repository/jio-snapshot/</url>
-	    </snapshotRepository>
+              <id>nexus</id>
+              <name>KK FUNDA Releases Nexus Repository</name>
+              <url>http://13.232.185.240:8081/repository/airtel-release/</url>
+            </repository>
+
+            <snapshotRepository>
+              <id>nexus</id>
+              <name>KK FUNDA Snapshot Nexus Repository </name>
+              <url>http://13.232.185.240:8081/repository/airtel-snapshot/</url>
+            </snapshotRepository>
 	    
 	</distributionManagement>
 	
