@@ -12,7 +12,7 @@ node {
             notifyBuild('STARTED')
 
             git branch: 'master',
-                url: 'https://github.com/kkdevopsb10/maven-webapplication-project-kkfunda.git'
+                url: 'https://github.com/DNadendla/maven-webapplication-project-kkfunda.git'
         }
 
         stage('Compile') {
