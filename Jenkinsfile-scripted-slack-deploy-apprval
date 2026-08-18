@@ -4,7 +4,7 @@ node {
     echo "Job Name: ${env.JOB_NAME}"
     echo "Build Number: ${env.BUILD_NUMBER}"
 
-    def mavenHome = tool name: "maven-3.9.16"
+    def mavenHome = tool name: "MAVEN-3.9.16"
 
     try {
 
