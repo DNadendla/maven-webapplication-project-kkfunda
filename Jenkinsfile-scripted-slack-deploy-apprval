@@ -23,7 +23,7 @@ node {
             sh "${mavenHome}/bin/mvn clean package"
         }
 
-        
+        /*
         stage('SonarQube Analysis') {
             withSonarQubeEnv('sonar') {
                 sh """
@@ -32,7 +32,11 @@ node {
                 """
             }
         }
-        
+        */
+
+        stage('sonarqube report') {
+            sh "${mavenHome}/bin/mvn sonar:sonar"
+        }
 
         stage('Deploy Artifact to Maven Repository') {
             sh "${mavenHome}/bin/mvn deploy"
