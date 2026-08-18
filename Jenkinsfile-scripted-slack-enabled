@@ -5,6 +5,7 @@ node {
     try {
 
         stage('git checkout') {
+            notifyBuild('STARTED')
             git branch: 'master',
                 url: 'https://github.com/DNadendla/maven-webapplication-project-kkfunda.git'
         }
