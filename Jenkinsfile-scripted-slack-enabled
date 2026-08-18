@@ -1,59 +1,80 @@
 node {
-    def mavenHome=tool name: "MAVEN-3.9.16"
-	try {
-	stage('git checkout') {
-		git branch: 'master', url: 'https://github.com/DNadendla/maven-webapplication-project-kkfunda.git'
-	}
 
-	stage('clean & package') {
-		sh 'echo "Maven Clean & Compile Stage"'
-		sh "${mavenHome}/bin/mvn clean package"
-	}
+    def mavenHome = tool name: "MAVEN-3.9.16"
 
-	stage('sonarqube report') {
-		sh "${mavenHome}/bin/mvn sonar:sonar"
-	}
+    try {
 
-	stage('nexus-artifactory backup') {
-		sh "${mavenHome}/bin/mvn deploy" 
-	}
+        stage('git checkout') {
+            git branch: 'master',
+                url: 'https://github.com/DNadendla/maven-webapplication-project-kkfunda.git'
+        }
 
-	stage('tomcat deployment') {
-		sh """
-		curl -u kk:password \
-		--upload-file /var/lib/jenkins/workspace/scipted-way-PL-2/target/maven-web-application.war \
-		"http://65.2.152.135:8080/manager/text/deploy?path=/maven-web-application&update=true"
+        stage('clean & package') {
+            sh 'echo "Maven Clean & Compile Stage"'
+            sh "${mavenHome}/bin/mvn clean package"
+        }
 
-		""" 
-	}
-	} catch(e) {
-		currentBuild.result = "FAILED";
-	} finally {
-		notifyBuild(currentBuild.result);
-	}
+        stage('sonarqube report') {
+            sh "${mavenHome}/bin/mvn sonar:sonar"
+        }
+
+        stage('nexus deploy') {
+            sh "${mavenHome}/bin/mvn deploy"
+        }
+
+        stage('tomcat deployment') {
+            sh """
+                curl -u kk:password \\
+                --upload-file /var/lib/jenkins/workspace/scipted-way-PL-2/target/maven-web-application.war \\
+                "http://65.2.152.135:8080/manager/text/deploy?path=/maven-web-application&update=true"
+            """
+        }
+
+    } catch(e) {
+
+        currentBuild.result = "FAILED"
+
+    } finally {
+
+        notifyBuild(currentBuild.result)
+
+    }
 }
 
+
 def notifyBuild(String buildStatus = 'STARTED') {
-	//buildStatus null means, successful build
-	buildStatus = buildStatus ?: "SUCCESS"
 
-	//Default Values
-	def colorName = 'RED'
-	def colorCode = '#FF0000'
-	def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
-	def summary = "${subject} (${env.BUILD_URL})"
+    // buildStatus null means successful build
+    buildStatus = buildStatus ?: "SUCCESS"
 
-	// sh "echo $subject"
-	// sh "echo $summary"
+    // Default values
+    def colorName = 'RED'
+    def colorCode = '#FF0000'
 
-	//Override default values based on the build status
-	if(buildStatus == 'STARTED') {
-		colorCode = "#FFFF00"
-	} else if (buildStatus == 'SUCCESS') {
-		colorCode = "#278EF5"
-	} else {
-	 	colorCode =  "#FF0000"
-	}
+    def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+    def summary = "${subject} (${env.BUILD_URL})"
 
-	slackSend(color: colorCode, message: summary, channel: '#jai-ganesha-devops')
+    sh "echo '${subject}'"
+    sh "echo '${summary}'"
+
+    // Override default values based on build status
+    if (buildStatus == 'STARTED') {
+
+        colorCode = "#FFFF00"
+
+    } else if (buildStatus == 'SUCCESS') {
+
+        colorCode = "#278EF5"
+
+    } else {
+
+        colorCode = "#FF0000"
+
+    }
+
+    slackSend(
+        color: colorCode,
+        message: summary,
+        channel: '#jai-ganesha-devops'
+    )
 }
