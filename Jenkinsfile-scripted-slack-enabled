@@ -22,7 +22,7 @@ node {
 		sh """
 		curl -u kk:password \
 		--upload-file /var/lib/jenkins/workspace/scipted-way-PL-2/target/maven-web-application.war \
-		"http://65.2.152.135:8080/manager/text/deploy?path=/maven-web-application&update=true"
+		"http://43.205.177.15:8080/manager/text/deploy?path=/maven-web-application&update=true"
 
 		""" 
 	}
@@ -35,7 +35,7 @@ node {
 
 def notifyBuild(String buildStatus = 'STARTED') {
 	//buildStatus null means, successful build
-	buildStatus = buildStatus ?: "SUCCESS";
+	buildStatus = buildStatus ?: "SUCCESS"
 
 	//Default Values
 	def colorName = 'RED'
