@@ -1,0 +1,59 @@
+node {
+    def mavenHome=tool name: "MAVEN-3.9.16"
+	try {
+	stage('git checkout') {
+		git branch: 'master', url: 'https://github.com/DNadendla/maven-webapplication-project-kkfunda.git'
+	}
+
+	stage('clean & package') {
+		sh 'echo "Maven Clean & Compile Stage"'
+		sh "${mavenHome}/bin/mvn clean package"
+	}
+
+	stage('sonarqube report') {
+		sh "${mavenHome}/bin/mvn sonar:sonar"
+	}
+
+	stage('nexus-artifactory backup') {
+		sh "${mavenHome}/bin/mvn deploy" 
+	}
+
+	stage('tomcat deployment') {
+		sh """
+		curl -u kk:password \
+		--upload-file /var/lib/jenkins/workspace/scipted-way-PL-2/target/maven-web-application.war \
+		"http://43.205.177.15:8080/manager/text/deploy?path=/maven-web-application&update=true"
+
+		""" 
+	}
+	} catch(e) {
+		currentBuild.result = "FAILED";
+	} finally {
+		notifyBuild(currentBuild.result);
+	}
+}
+
+def notifyBuild(String buildStatus = 'STARTED') {
+	//buildStatus null means, successful build
+	buildStatus = buildStatus ?: "SUCCESS";
+
+	//Default Values
+	def colorName = 'RED'
+	def colorCode = '#FF0000'
+	def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+	def summary = "${subject} (${env.BUILD_URL})"
+
+	sh "echo $subject"
+	sh "echo $summary"
+
+	//Override default values based on the build status
+	if(buildStatus == 'STARTED') {
+		colorCode = "#FFFF00"
+	} else if (buildStatus == 'SUCCESS') {
+		colorCode = "#278EF5"
+	} else {
+	 	colorCode =  "#FF0000"
+	}
+
+	slackSend(color: colorCode, message: summary, channel: '#jai-ganesha-devops')
+}
