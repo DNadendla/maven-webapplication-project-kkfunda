@@ -1,0 +1,120 @@
+pipeline {
+
+    agent any
+
+    tools {
+        maven "MAVEN-3.9.16"
+    }
+
+    stages {
+      
+        stage('Git Checkout') {
+            steps {
+                echo 'Cloning Code'
+
+                notifyBuild('STARTED')
+
+                git branch: 'master',
+                    url: 'https://github.com/DNadendla/maven-webapplication-project-kkfunda.git'
+            }
+        }
+
+        stage('Clean & Package') {
+            steps {
+                sh 'echo "Maven Clean & Compile Stage"'
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('SonarQube Report') {
+            steps {
+                sh 'echo "SonarQube report generation"'
+                sh 'mvn sonar:sonar'
+            }
+        }
+
+        stage('Nexus Deploy') {
+            steps {
+                sh 'echo "Artifact upload"'
+                sh 'mvn deploy'
+            }
+        }
+
+        stage('Tomcat Deployment') {
+            steps {
+                sh """
+                    curl -u kk:password \\
+                    --upload-file "${WORKSPACE}/target/maven-web-application.war" \\
+                    "http://13.233.142.175:8080/manager/text/deploy?path=/maven-web-application&update=true"
+                """
+            }
+        }
+    }
+
+    post {
+
+        success {
+            script {
+                notifyBuild('SUCCESS')
+            }
+        }
+
+        failure {
+            script {
+                notifyBuild('FAILURE')
+            }
+        }
+
+        aborted {
+            script {
+                notifyBuild('ABORTED')
+            }
+        }
+    }
+}
+
+
+def notifyBuild(String buildStatus = 'STARTED') {
+
+    buildStatus = buildStatus ?: 'SUCCESS'
+
+    def colorCode = '#5B6EE1'
+
+    def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+    def summary = "${subject} (${env.BUILD_URL})"
+
+    echo "${subject}"
+    echo "${summary}"
+
+    if (buildStatus == 'STARTED') {
+
+        // Amber
+        colorCode = '#F2C94C'
+
+    } else if (buildStatus == 'SUCCESS') {
+
+        // Professional Green
+        colorCode = '#27AE60'
+
+    } else if (buildStatus == 'FAILURE') {
+
+        // Soft Red
+        colorCode = '#EB5757'
+
+    } else if (buildStatus == 'ABORTED') {
+
+        // Gray
+        colorCode = '#828282'
+
+    } else {
+
+        // Indigo
+        colorCode = '#5B6EE1'
+    }
+
+    slackSend(
+        color: colorCode,
+        message: summary,
+        channel: '#jai-ganesha-devops'
+    )
+}
